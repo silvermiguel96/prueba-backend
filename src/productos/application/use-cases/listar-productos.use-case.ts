@@ -4,7 +4,7 @@ import { Producto } from '../../domain/entities/producto.entity';
 export class ListarProductosUseCase {
   constructor(private readonly repo: ProductoRepository) {}
 
-  async ejecutar(): Promise<Producto[]> {
+  async execute(): Promise<Producto[]> {
     return await this.repo.listar();
   }
 }

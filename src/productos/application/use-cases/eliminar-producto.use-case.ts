@@ -3,7 +3,7 @@ import { ProductoRepository } from '../../domain/repositories/producto.repositor
 export class EliminarProductoUseCase {
   constructor(private readonly repo: ProductoRepository) {}
 
-  async ejecutar(id: string): Promise<void> {
+  async execute(id: string): Promise<void> {
     return await this.repo.eliminar(id);
   }
 }
