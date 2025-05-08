@@ -1,9 +1,10 @@
 name: CI/CD Pipeline
 
 on:
-  push:
-    branches: [main]
   pull_request:
+    types: [opened, synchronize]
+    branches: [main]
+  push:
     branches: [main]
 
 jobs:
@@ -39,9 +40,8 @@ jobs:
       - name: Run tests
         run: npm run test
 
-  # Despliegue con Terraform (opcional)
   deploy:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && success()  # Despliegue solo si es la rama main y los tests pasaron
     needs: test
     runs-on: ubuntu-latest
     env:
@@ -58,5 +58,10 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
-      - name: Terraform Apply
-        run: terraform apply -auto-approve
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply (only if there are changes)
+        run: |
+          terraform show -no-color tfplan || exit 0  # Solo ejecuta 'apply' si terraform 'plan' encuentra cambios
+          terraform apply -auto-approve tfplan
