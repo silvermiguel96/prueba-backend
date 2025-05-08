@@ -1,4 +1,5 @@
 import { ProductoRepository } from '../../domain/repositories/producto.repository';
+import { ApiError } from '../../../common/exceptions/api-error';
 
 interface ActualizarProductoDTO {
   id: string;
@@ -13,7 +14,11 @@ export class ActualizarProductoUseCase {
 
   async execute(dto: ActualizarProductoDTO) {
     const producto = await this.repo.buscarPorId(dto.id);
-    if (!producto) throw new Error('Producto no encontrado');
+    if (!producto) {
+      throw new ApiError(404, 'Producto no encontrado', [
+        'Por favor, asegúrese de que el ID del producto es correcto.',
+      ]);
+    }
 
     producto.actualizar({
       nombre: dto.nombre,

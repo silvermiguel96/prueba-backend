@@ -1,0 +1,67 @@
+name: CI/CD Pipeline
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  validate-pr-title:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate PR title
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          if [[ ! "$PR_TITLE" =~ ^(feat|fix|chore|docs|refactor|test|style|perf)\: ]]; then
+            echo "❌ PR title must start with one of: feat:, fix:, chore:, docs:, refactor:, test:, style:, perf:"
+            echo "Actual title: $PR_TITLE"
+            exit 1
+          else
+            echo "✅ PR title is valid."
+          fi
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm run test
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && success()  # Despliegue solo si es la rama main y los tests pasaron
+    needs: test
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: 'us-east-1'
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Apply (only if there are changes)
+        run: |
+          terraform show -no-color tfplan || exit 0  # Solo ejecuta 'apply' si terraform 'plan' encuentra cambios
+          terraform apply -auto-approve tfplan
