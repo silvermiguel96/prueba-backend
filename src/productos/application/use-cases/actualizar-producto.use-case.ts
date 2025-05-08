@@ -11,7 +11,7 @@ interface ActualizarProductoDTO {
 export class ActualizarProductoUseCase {
   constructor(private readonly repo: ProductoRepository) {}
 
-  async ejecutar(dto: ActualizarProductoDTO) {
+  async execute(dto: ActualizarProductoDTO) {
     const producto = await this.repo.buscarPorId(dto.id);
     if (!producto) throw new Error('Producto no encontrado');
 

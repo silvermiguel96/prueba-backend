@@ -12,7 +12,7 @@ interface CrearProductoDTO {
 export class CrearProductoUseCase {
   constructor(private readonly repo: ProductoRepository) {}
 
-  async ejecutar(dto: CrearProductoDTO): Promise<Producto> {
+  async execute(dto: CrearProductoDTO): Promise<Producto> {
     const nuevo = new Producto(
       uuidv4(),
       dto.nombre,
